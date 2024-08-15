@@ -27,7 +27,7 @@ class Ui_MainWindow(object):
         self.label_SMILES = QtWidgets.QLabel(self.centralwidget)
         self.label_SMILES.setGeometry(QtCore.QRect(50, 40, 80, 41))
         font = QtGui.QFont()
-        font.setFamily("Arial")
+        font.setFamily("Alegreya")
         font.setPointSize(14)
         self.label_SMILES.setFont(font)
         self.label_SMILES.setObjectName("label_SMILES")
@@ -47,7 +47,7 @@ class Ui_MainWindow(object):
         self.Button.setGeometry(QtCore.QRect(590, 40, 150, 41))
         font = QtGui.QFont()
         font.setPointSize(14)
-        font.setFamily('Arial')
+        font.setFamily('Alegreya')
         self.Button.setFont(font)
         self.Button.setObjectName("Button")
         self.Button.clicked.connect(self.visualize)
@@ -106,17 +106,38 @@ class Ui_MainWindow(object):
         self.check3.stateChanged.connect(lambda:self.uncheck(self.check3)) 
         self.check4.stateChanged.connect(lambda:self.uncheck(self.check4)) 
 
-        
 
+
+
+        # Label for 2D images        
+        self.label2=QtWidgets.QLabel(self.centralwidget)
+        self.label2.setGeometry(QtCore.QRect(600,185,220,20))
+        self.label2.setText("2D image")
+        self.label2.setObjectName('label2')
+        self.label2.setFont(QtGui.QFont('Arial',12))
 
         # 2D images
-        self.tiny2D = QtWidgets.QLabel(
-        self.centralwidget)
-        self.tiny2D.setGeometry(QtCore.QRect(600, 200, 200, 200))
+        self.tiny2D = QtWidgets.QLabel(self.centralwidget)
+        self.tiny2D.setGeometry(QtCore.QRect(600, 210, 220, 220))
         #self.tiny2D.setPixmap(QtGui.QPixmap('none'))
         self.tiny2D.setStyleSheet("background-color:white")
         self.tiny2D.setScaledContents(True)
         self.tiny2D.setObjectName("tiny2D")
+
+        #Label explain the Image
+        self.labelC=QtWidgets.QLabel(self.centralwidget)
+        self.labelC.setGeometry(QtCore.QRect(600,435,200,20))
+        self.labelC.setText("Gasteiger Charge")
+        self.labelC.setObjectName('tinyC2D')
+        self.labelC.setFont(QtGui.QFont('Arial',12))
+
+        # 2D images with Gasteiger Charge
+        self.tinyC2D=QtWidgets.QLabel(self.centralwidget)
+        self.tinyC2D.setGeometry(QtCore.QRect(600,460,220,220))
+        self.tinyC2D.setStyleSheet("background-color:white")
+        
+        self.tinyC2D.setScaledContents(True)
+        self.tinyC2D.setObjectName("tinyC2D")
 
 
 
@@ -128,7 +149,6 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -158,7 +178,16 @@ class Ui_MainWindow(object):
         dos.addAtomIndices=True
         img=Draw.MolToImage(mol, options= dos)
         img.save('2D_Structure.png')
-        
+    
+    def MolTo2DCharge(self,SMILES):
+        mol=Chem.MolFromSmiles(SMILES)
+        AllChem.ComputeGasteigerCharges(mol)
+        mol2=Chem.Mol(mol)
+        for at in mol2.GetAtoms():
+            lbl = '%.2f'%(at.GetDoubleProp("_GasteigerCharge"))
+            at.SetProp('atomNote',lbl)
+        img=Draw.MolToImage(mol2)
+        img.save("2DMolCharge.png")
 
     def smi2conf(self, smiles):
         '''Convert SMILES to rdkit.Mol with 3D coordinates'''
@@ -180,6 +209,9 @@ class Ui_MainWindow(object):
         self.visualize_region.setHtml(html)
         self.MolTo2DImg(SMILES)
         self.tiny2D.setPixmap(QtGui.QPixmap('2D_Structure.png'))
+        self.MolTo2DCharge(SMILES)
+        self.tinyC2D.setPixmap(QtGui.QPixmap("2DMolCharge.png"))
+
         
 
 
