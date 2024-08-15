@@ -65,48 +65,46 @@ class Ui_MainWindow(object):
 
 
         # visualize_region to show the stuff
-        # define parameters for the 3D model
-        self.style='sphere'
 
-        self.visualize_region = QtWebEngineWidgets.QWebEngineView(
-            self.centralwidget)
+        self.visualize_region = QtWebEngineWidgets.QWebEngineView(self.centralwidget)
         self.visualize_region.setGeometry(QtCore.QRect(50, 200, 500, 500))
         self.visualize_region.setObjectName("visualize_region")
 
         # Create checkboxes: 'line', 'stick', 'sphere',"cross"
-        hbox=QtWidgets.QWidget(self.centralwidget)
-        hbox.setGeometry(50,100,500,100)
-        h_layout=QtWidgets.QHBoxLayout(hbox)
+        self.hbox=QtWidgets.QWidget(self.centralwidget)
+        self.hbox.setGeometry(50,100,500,100)
+        self.h_layout=QtWidgets.QHBoxLayout(self.hbox)
 
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setFamily('Arial')
-        hbox.setFont(font)
+        self.hbox.setFont(font)
 
         self.check1=QtWidgets.QCheckBox(self.centralwidget)
         self.check1.setText("line")
-        h_layout.addWidget(self.check1)
+        self.check1.setAutoExclusive(True)
+        self.check1.setObjectName("line")
+        self.h_layout.addWidget(self.check1)
+        
 
         self.check2=QtWidgets.QCheckBox(self.centralwidget)
         self.check2.setText("stick")
-        h_layout.addWidget(self.check2)
+        self.check2.setAutoExclusive(True)
+        self.check2.setObjectName("stick")
+        self.h_layout.addWidget(self.check2)
 
         self.check3=QtWidgets.QCheckBox(self.centralwidget)
         self.check3.setText("sphere")
-        h_layout.addWidget(self.check3)
+        self.check3.setAutoExclusive(True)
+        self.check3.setObjectName("sphere")
+        self.h_layout.addWidget(self.check3)
         self.check3.setChecked(True)
 
         self.check4=QtWidgets.QCheckBox(self.centralwidget)
         self.check4.setText("cross")
-        h_layout.addWidget(self.check4)
-
-
-        self.check1.stateChanged.connect(lambda:self.uncheck(self.check1)) 
-        self.check2.stateChanged.connect(lambda:self.uncheck(self.check2)) 
-        self.check3.stateChanged.connect(lambda:self.uncheck(self.check3)) 
-        self.check4.stateChanged.connect(lambda:self.uncheck(self.check4)) 
-
-
+        self.check4.setAutoExclusive(True)
+        self.check4.setObjectName("cross")
+        self.h_layout.addWidget(self.check4)
 
 
         # Label for 2D images        
@@ -158,6 +156,12 @@ class Ui_MainWindow(object):
         self.label_SMILES.setText(_translate("MainWindow", "SMILES"))
         self.Button.setText(_translate("MainWindow", "Visualize"))
 
+        self.check1.setText(_translate("MainWindow", "line"))
+        self.check2.setText(_translate("MainWindow", "stick"))
+        self.check3.setText(_translate("MainWindow", "sphere"))
+        self.check4.setText(_translate("MainWindow", "cross"))
+
+
 
     def MolTo3DView(self, mol, size=(300, 300), style="stick", surface=False, opacity=0.5):
         """Draw molecule in 3D"""
@@ -196,13 +200,25 @@ class Ui_MainWindow(object):
             return mol
         else:
             return None
+    
+    def appearance(self):
+        if self.check1.checkState()==2:
+            return 'line'
+        elif self.check2.checkState()==2:
+            return 'stick'
+        elif self.check4.checkState()==2:
+            return 'cross'
+        else:
+            return 'sphere'
+
 
     def visualize(self):
         SMILES = self.lineEdit.text()
         SMILES=SMILES.upper()
         mol = Chem.MolFromSmiles(SMILES)
         conf = self.smi2conf(mol)
-        viewer = self.MolTo3DView(conf, size=(500, 400), style=self.style)
+        style=self.appearance()
+        viewer = self.MolTo3DView(conf, size=(500, 400), style=style)
         html = viewer._make_html()
         self.visualize_region.setHtml(html)
         self.MolTo2DImg(mol)
@@ -214,30 +230,6 @@ class Ui_MainWindow(object):
         formula=rdMolDescriptors.CalcMolFormula(mol)
         self.label2.setText(f"Formula: {formula}\nMw: {Mw} g/mol")
     
-
-    # Create checkboxes: 'line', 'stick', 'sphere',"cross"
-    def uncheck(self,state):
-        if state.text()=="line" and state.checkState()==2:
-            self.check2.setChecked(False)
-            self.check3.setChecked(False)
-            self.check4.setChecked(False)
-
-        elif state.text()=="stick" and state.checkState()==2:
-            self.check1.setChecked(False)
-            self.check3.setChecked(False)
-            self.check4.setChecked(False)
-
-        elif state.text()=="sphere" and state.checkState()==2:
-            self.check1.setChecked(False)
-            self.check2.setChecked(False)
-            self.check4.setChecked(False)
-
-        elif state.text()=="cross" and state.checkState()==2:
-            self.check1.setChecked(False)
-            self.check2.setChecked(False)
-            self.check3.setChecked(False)
-
-        self.style=state.text()
         
 
 
