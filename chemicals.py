@@ -13,7 +13,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 from rdkit import Chem
-from rdkit.Chem import AllChem, Draw
+from rdkit.Chem import AllChem, Draw, Descriptors, rdMolDescriptors
 import py3Dmol
 import sys
 
@@ -111,8 +111,8 @@ class Ui_MainWindow(object):
 
         # Label for 2D images        
         self.label2=QtWidgets.QLabel(self.centralwidget)
-        self.label2.setGeometry(QtCore.QRect(600,185,220,20))
-        self.label2.setText("2D image")
+        self.label2.setGeometry(QtCore.QRect(600,160,220,40))
+        self.label2.setText("2D Image")
         self.label2.setObjectName('label2')
         self.label2.setFont(QtGui.QFont('Arial',12))
 
@@ -135,7 +135,6 @@ class Ui_MainWindow(object):
         self.tinyC2D=QtWidgets.QLabel(self.centralwidget)
         self.tinyC2D.setGeometry(QtCore.QRect(600,460,220,220))
         self.tinyC2D.setStyleSheet("background-color:white")
-        
         self.tinyC2D.setScaledContents(True)
         self.tinyC2D.setObjectName("tinyC2D")
 
@@ -172,15 +171,14 @@ class Ui_MainWindow(object):
         viewer.zoomTo()
         return viewer
     
-    def MolTo2DImg(self,SMILES):
-        mol = Chem.MolFromSmiles(SMILES)
+    def MolTo2DImg(self,mol):
         dos = Draw.MolDrawOptions()
         dos.addAtomIndices=True
+        dos.addStereoAnnotation = True
         img=Draw.MolToImage(mol, options= dos)
         img.save('2D_Structure.png')
     
-    def MolTo2DCharge(self,SMILES):
-        mol=Chem.MolFromSmiles(SMILES)
+    def MolTo2DCharge(self,mol):
         AllChem.ComputeGasteigerCharges(mol)
         mol2=Chem.Mol(mol)
         for at in mol2.GetAtoms():
@@ -189,9 +187,8 @@ class Ui_MainWindow(object):
         img=Draw.MolToImage(mol2)
         img.save("2DMolCharge.png")
 
-    def smi2conf(self, smiles):
+    def smi2conf(self, mol):
         '''Convert SMILES to rdkit.Mol with 3D coordinates'''
-        mol = Chem.MolFromSmiles(smiles)
         if mol is not None:
             mol = Chem.AddHs(mol)
             AllChem.EmbedMolecule(mol)
@@ -203,19 +200,19 @@ class Ui_MainWindow(object):
     def visualize(self):
         SMILES = self.lineEdit.text()
         SMILES=SMILES.upper()
-        conf = self.smi2conf(SMILES)
+        mol = Chem.MolFromSmiles(SMILES)
+        conf = self.smi2conf(mol)
         viewer = self.MolTo3DView(conf, size=(500, 400), style=self.style)
         html = viewer._make_html()
         self.visualize_region.setHtml(html)
-        self.MolTo2DImg(SMILES)
+        self.MolTo2DImg(mol)
         self.tiny2D.setPixmap(QtGui.QPixmap('2D_Structure.png'))
-        self.MolTo2DCharge(SMILES)
+        self.MolTo2DCharge(mol)
         self.tinyC2D.setPixmap(QtGui.QPixmap("2DMolCharge.png"))
-
-        
-
-
-    
+        #Calculate average molecular weight
+        Mw=round(Descriptors.MolWt(mol),4)
+        formula=rdMolDescriptors.CalcMolFormula(mol)
+        self.label2.setText(f"Formula: {formula}\nMw: {Mw} g/mol")
     
 
     # Create checkboxes: 'line', 'stick', 'sphere',"cross"
