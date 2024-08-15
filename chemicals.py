@@ -13,14 +13,15 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 from rdkit import Chem
-from rdkit.Chem import AllChem
+from rdkit.Chem import AllChem, Draw
 import py3Dmol
+import sys
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(888, 712)
+        MainWindow.resize(900, 712)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.label_SMILES = QtWidgets.QLabel(self.centralwidget)
@@ -33,7 +34,7 @@ class Ui_MainWindow(object):
 
         # smiles input:lineEdit
         self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit.setGeometry(QtCore.QRect(180, 40, 280, 41))
+        self.lineEdit.setGeometry(QtCore.QRect(150, 40, 280, 41))
         font = QtGui.QFont()
         font.setFamily('Arial')
         font.setPointSize(12)
@@ -51,6 +52,7 @@ class Ui_MainWindow(object):
         self.Button.setObjectName("Button")
         self.Button.clicked.connect(self.visualize)
 
+        # Label for explaination
         self.explain=QtWidgets.QLabel(self.centralwidget)
         self.explain.setText("e.g. For 2-Benzoylmalononitrile, you have to type in : C1=CC=C(C=C1)C(=O)C(C#N)C#N")
         self.explain.setGeometry(QtCore.QRect(QtCore.QRect(50, 80, 500, 35)))
@@ -63,9 +65,12 @@ class Ui_MainWindow(object):
 
 
         # visualize_region to show the stuff
+        # define parameters for the 3D model
+        self.style='sphere'
+
         self.visualize_region = QtWebEngineWidgets.QWebEngineView(
             self.centralwidget)
-        self.visualize_region.setGeometry(QtCore.QRect(60, 200, 711, 421))
+        self.visualize_region.setGeometry(QtCore.QRect(50, 200, 500, 500))
         self.visualize_region.setObjectName("visualize_region")
 
         # Create checkboxes: 'line', 'stick', 'sphere',"cross"
@@ -101,8 +106,19 @@ class Ui_MainWindow(object):
         self.check3.stateChanged.connect(lambda:self.uncheck(self.check3)) 
         self.check4.stateChanged.connect(lambda:self.uncheck(self.check4)) 
 
-        #define parameters
-        self.style='sphere'
+        
+
+
+        # 2D images
+        self.tiny2D = QtWidgets.QLabel(
+        self.centralwidget)
+        self.tiny2D.setGeometry(QtCore.QRect(600, 200, 200, 200))
+        #self.tiny2D.setPixmap(QtGui.QPixmap('none'))
+        self.tiny2D.setStyleSheet("background-color:white")
+        self.tiny2D.setScaledContents(True)
+        self.tiny2D.setObjectName("tiny2D")
+
+
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -124,8 +140,6 @@ class Ui_MainWindow(object):
         self.Button.setText(_translate("MainWindow", "Visualize"))
 
 
-
-
     def MolTo3DView(self, mol, size=(300, 300), style="stick", surface=False, opacity=0.5):
         """Draw molecule in 3D"""
         assert style in ('line', 'stick', 'sphere',"cross")
@@ -137,6 +151,14 @@ class Ui_MainWindow(object):
             viewer.addSurface(py3Dmol.SAS, {'opacity': opacity})
         viewer.zoomTo()
         return viewer
+    
+    def MolTo2DImg(self,SMILES):
+        mol = Chem.MolFromSmiles(SMILES)
+        dos = Draw.MolDrawOptions()
+        dos.addAtomIndices=True
+        img=Draw.MolToImage(mol, options= dos)
+        img.save('2D_Structure.png')
+        
 
     def smi2conf(self, smiles):
         '''Convert SMILES to rdkit.Mol with 3D coordinates'''
@@ -151,10 +173,18 @@ class Ui_MainWindow(object):
 
     def visualize(self):
         SMILES = self.lineEdit.text()
+        SMILES=SMILES.upper()
         conf = self.smi2conf(SMILES)
-        viewer = self.MolTo3DView(conf, size=(711, 421), style=self.style)
+        viewer = self.MolTo3DView(conf, size=(500, 400), style=self.style)
         html = viewer._make_html()
         self.visualize_region.setHtml(html)
+        self.MolTo2DImg(SMILES)
+        self.tiny2D.setPixmap(QtGui.QPixmap('2D_Structure.png'))
+        
+
+
+    
+    
 
     # Create checkboxes: 'line', 'stick', 'sphere',"cross"
     def uncheck(self,state):
@@ -184,7 +214,7 @@ class Ui_MainWindow(object):
 
 
 if __name__ == "__main__":
-    import sys
+    
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
