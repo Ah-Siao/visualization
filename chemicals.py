@@ -16,18 +16,51 @@ from rdkit import Chem
 from rdkit.Chem import AllChem, Draw, Descriptors, rdMolDescriptors
 import py3Dmol
 import sys
+from searchcid import Ui_Dialog as SearchCIDUI
+
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(900, 712)
+        MainWindow.setWindowTitle("Chemical Visualization Tool")
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        # Add menubar
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 900, 26))
+        self.menubar.setObjectName("menubar")
+        MainWindow.setMenuBar(self.menubar)
+
+        self.SearchSMILES=QtWidgets.QMenu(self.menubar)
+        self.SearchSMILES.setObjectName("SearchSMILES")
+        self.SearchSMILES.setTitle("Search")
+
+        #MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+
+        self.CIDSearch = QtWidgets.QAction(MainWindow)
+        self.CIDSearch.setObjectName("CIDSearch")
+        self.CIDSearch.setText("CIDSearch")
+
+        self.SearchSMILES.addAction(self.CIDSearch)
+
+        self.menubar.addAction(self.SearchSMILES.menuAction())
+
+        self.CIDSearch.triggered.connect(self.SearchCID)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+        # SMILES label
         self.label_SMILES = QtWidgets.QLabel(self.centralwidget)
         self.label_SMILES.setGeometry(QtCore.QRect(50, 40, 80, 41))
         font = QtGui.QFont()
-        font.setFamily("Alegreya")
+        font.setFamily("Arial")
         font.setPointSize(14)
         self.label_SMILES.setFont(font)
         self.label_SMILES.setObjectName("label_SMILES")
@@ -35,6 +68,7 @@ class Ui_MainWindow(object):
         # smiles input:lineEdit
         self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit.setGeometry(QtCore.QRect(150, 40, 280, 41))
+        self.lineEdit.setToolTip("Enter a SMILES string representing a molecule.")
         font = QtGui.QFont()
         font.setFamily('Arial')
         font.setPointSize(12)
@@ -136,23 +170,12 @@ class Ui_MainWindow(object):
         self.tinyC2D.setScaledContents(True)
         self.tinyC2D.setObjectName("tinyC2D")
 
-
-
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 888, 26))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Chemical Visualization Tool"))
         self.label_SMILES.setText(_translate("MainWindow", "SMILES"))
         self.Button.setText(_translate("MainWindow", "Visualize"))
 
@@ -160,6 +183,16 @@ class Ui_MainWindow(object):
         self.check2.setText(_translate("MainWindow", "stick"))
         self.check3.setText(_translate("MainWindow", "sphere"))
         self.check4.setText(_translate("MainWindow", "cross"))
+
+        self.SearchSMILES.setTitle(_translate("MainWindow", "Search SMILES"))
+        self.CIDSearch.setText(_translate("MainWindow", "CIDSearch"))
+    
+    def SearchCID(self):
+        self.Dialog = QtWidgets.QDialog()
+        self.cid=SearchCIDUI()
+        self.cid.setupUi(self.Dialog)
+        self.Dialog.show()
+
 
 
 
@@ -210,32 +243,47 @@ class Ui_MainWindow(object):
             return 'cross'
         else:
             return 'sphere'
+    
+    def SMILES_ERROR(self):
+        msg= QtWidgets.QMessageBox()
+        msg.setWindowTitle("Error")
+        msg.setText("Please Enter Correct SMILES String !!!")
+        msg.setIcon(QtWidgets.QMessageBox.Critical)
+        x = msg.exec_()
 
 
     def visualize(self):
         SMILES = self.lineEdit.text()
         SMILES=SMILES.upper()
-        mol = Chem.MolFromSmiles(SMILES)
-        conf = self.smi2conf(mol)
-        style=self.appearance()
-        viewer = self.MolTo3DView(conf, size=(500, 400), style=style)
-        html = viewer._make_html()
-        self.visualize_region.setHtml(html)
-        self.MolTo2DImg(mol)
-        self.tiny2D.setPixmap(QtGui.QPixmap('2D_Structure.png'))
-        self.MolTo2DCharge(mol)
-        self.tinyC2D.setPixmap(QtGui.QPixmap("2DMolCharge.png"))
-        #Calculate average molecular weight
-        Mw=round(Descriptors.MolWt(mol),4)
-        formula=rdMolDescriptors.CalcMolFormula(mol)
-        self.label2.setText(f"Formula: {formula}\nMw: {Mw} g/mol")
+        try:
+            mol = Chem.MolFromSmiles(SMILES)
+            if mol is None:
+                raise ValueError("Invalid SMILES string")
+            conf = self.smi2conf(mol)
+            if conf is None:
+                raise ValueError("Failed to generate 3D conformer")
+            style=self.appearance()
+            viewer = self.MolTo3DView(conf, size=(500, 400), style=style)
+            html = viewer._make_html()
+            self.visualize_region.setHtml(html)
+            self.MolTo2DImg(mol)
+            self.tiny2D.setPixmap(QtGui.QPixmap('2D_Structure.png'))
+            self.MolTo2DCharge(mol)
+            self.tinyC2D.setPixmap(QtGui.QPixmap("2DMolCharge.png"))
+            #Calculate average molecular weight
+            Mw=round(Descriptors.MolWt(mol),4)
+            formula=rdMolDescriptors.CalcMolFormula(mol)
+            self.label2.setText(f"Formula: {formula}\nMw: {Mw} g/mol")
+        except Exception as e:
+            self.SMILES_ERROR()
+            self.label2.setText(f"Error: {str(e)}")
+            self.tiny2D.clear()
+            self.tinyC2D.clear()
+            self.visualize_region.setHtml("")
     
         
 
-
-
 if __name__ == "__main__":
-    
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

@@ -1,0 +1,4 @@
+py3Dmol
+rdkit
+pyqt5
+pyqt5-tools
