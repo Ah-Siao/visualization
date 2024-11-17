@@ -4,7 +4,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 import time
 import sys
 
-
+# With for loop:
 class ThreadTask(QThread):
     # Signal to update the progress bar
     qthread_signal = pyqtSignal(int)
@@ -15,15 +15,34 @@ class ThreadTask(QThread):
             time.sleep(0.01)  # Simulate a time-consuming task
             self.qthread_signal.emit(i + 1)
 
+
+def input_function1():
+    time.sleep(1)
+    print('finish searching fxn1')
+    return 0
+
+def input_function2():
+    time.sleep(2)
+    print('finish searching fxn2')
+    return 1
+
 class ThreadTask2(QThread):
     # Signal for string
     qthread_signal=pyqtSignal(str)
+    def __init__(self,input_function,parent=None):
+        super().__init__(parent)
+        self.input_function=input_function
     def run(self):
-        self.qthread_signal.emit('Start Searching...')
-        # put function here:
-        time.sleep(1)
-        self.qthread_signal.emit('Finish')
-
+        if self.input_function is input_function1:
+            self.qthread_signal.emit('Start searching fxn1')
+            self.input_function()
+            self.qthread_signal.emit('Finish')
+        elif self.input_function is input_function2:
+            self.qthread_signal.emit('Start searching fxn2')
+            self.input_function()
+            self.qthread_signal.emit('Finish')
+        else:
+            pass
 
 class MainWindowController(QtWidgets.QMainWindow):
     def __init__(self):
@@ -59,15 +78,19 @@ class MainWindowController(QtWidgets.QMainWindow):
         self.pushbutton.clicked.connect(self.button_click)
         self.stop_progress()
 
+ 
     def button_click(self):
         self.progressbar.show()
         # Create thread instance
         #self.qthread=ThreadTask()
-        self.qthread = ThreadTask2()
+        self.qthread = ThreadTask2(input_function1)
+        self.qthread2=ThreadTask2(input_function2)
         # Connect signal from thread to the slot in main thread
         # self.qthread.qthread_signal.connect(self.progress_changed)
         self.qthread.qthread_signal.connect(self.progress_undetermine)
+        self.qthread2.qthread_signal.connect(self.progress_undetermine)
         # Start the thread
+        self.qthread2.start()
         self.qthread.start()
 
     def progress_changed(self, value):
