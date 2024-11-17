@@ -33,16 +33,10 @@ class ThreadTask2(QThread):
         super().__init__(parent)
         self.input_function=input_function
     def run(self):
-        if self.input_function is input_function1:
-            self.qthread_signal.emit('Start searching fxn1')
-            self.input_function()
-            self.qthread_signal.emit('Finish')
-        elif self.input_function is input_function2:
-            self.qthread_signal.emit('Start searching fxn2')
-            self.input_function()
-            self.qthread_signal.emit('Finish')
-        else:
-            pass
+        print(self.input_function.__name__)
+        self.qthread_signal.emit(f'Start searching {self.input_function.__name__}')
+        self.input_function()
+        self.qthread_signal.emit("Finish")
 
 class MainWindowController(QtWidgets.QMainWindow):
     def __init__(self):
@@ -105,7 +99,6 @@ class MainWindowController(QtWidgets.QMainWindow):
         self.progressbar.setRange(0,0)
         self.progresslabel.show()
         self.progresslabel.setText(value)
-        
         if value =='Finish':
             self.stop_progress()
             self.progresslabel.setText(value)
