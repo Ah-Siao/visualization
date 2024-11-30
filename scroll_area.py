@@ -1,51 +1,45 @@
+from PyQt5.QtWidgets import (QWidget, QSlider, QLineEdit, QLabel, QPushButton, QScrollArea,QApplication,
+                             QHBoxLayout, QVBoxLayout, QMainWindow, QFrame, QDockWidget)
+from PyQt5.QtCore import Qt, QSize
+from PyQt5 import QtWidgets, uic
 import sys
-from PyQt5.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QDockWidget,
-    QScrollArea,
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QPushButton,
-)
-from PyQt5.QtCore import Qt
+
 
 class MainWindow(QMainWindow):
+
     def __init__(self):
         super().__init__()
+        self.initUI()
 
-        self.setWindowTitle("QDockWidget with Scrollable Content")
-        self.setGeometry(100, 100, 800, 600)
+    def initUI(self):
+        self.scroll = QScrollArea()             
+        self.widget = QFrame()       
+        self.vbox = QVBoxLayout()              
 
-        # Create a dock widget
-        dock = QDockWidget("Scrollable Dock", self)
-        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        for i in range(1,50):
+            object = QLabel("TextLabel")
+            self.vbox.addWidget(object)
 
-        # Create a scroll area
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
+        self.widget.setLayout(self.vbox)
 
-        # Create a widget to hold the content
-        content_widget = QWidget()
-        layout = QVBoxLayout(content_widget)
+        #Scroll Area Properties
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.widget)
 
-        # Add many widgets to make it scrollable
-        for i in range(30):
-            layout.addWidget(QLabel(f"Label {i+1}"))
-            layout.addWidget(QPushButton(f"Button {i+1}"))
+        self.setCentralWidget(self.scroll)
 
-        # Set the content widget as the scroll area's widget
-        scroll_area.setWidget(content_widget)
+        self.setGeometry(600, 100, 500, 500)
+        self.setWindowTitle('Scroll Area Demonstration')
+        self.show()
 
-        # Set the scroll area as the dock widget's widget
-        dock.setWidget(scroll_area)
+        return
 
-        # Add the dock widget to the main window
-        self.addDockWidget(Qt.RightDockWidgetArea, dock)
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+    main = MainWindow()
     sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
