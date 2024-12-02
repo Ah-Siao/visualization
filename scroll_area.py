@@ -1,45 +1,47 @@
-from PyQt5.QtWidgets import (QWidget, QSlider, QLineEdit, QLabel, QPushButton, QScrollArea,QApplication,
-                             QHBoxLayout, QVBoxLayout, QMainWindow, QFrame, QDockWidget)
-from PyQt5.QtCore import Qt, QSize
-from PyQt5 import QtWidgets, uic
-import sys
+from PyQt5.QtWidgets import (
+    QApplication, QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
+    QPushButton, QLabel, QLineEdit, QComboBox, QScrollArea
+)
+from PyQt5.QtCore import Qt
 
-
-class MainWindow(QMainWindow):
-
+class MainWindow(QDockWidget):
     def __init__(self):
         super().__init__()
-        self.initUI()
+        
+        self.setWindowTitle("Main Dockable Window")
+        
 
-    def initUI(self):
-        self.scroll = QScrollArea()             
-        self.widget = QFrame()       
-        self.vbox = QVBoxLayout()              
+        container = QWidget()
+        layout = QVBoxLayout(container)
 
-        for i in range(1,50):
-            object = QLabel("TextLabel")
-            self.vbox.addWidget(object)
+        layout.addWidget(QLabel("This is a label"))
+        layout.addWidget(QLineEdit("Editable text"))
+        for i in range(20):
+            layout.addWidget(QLabel(f'This is label{i}'))
+        
+        combo_box = QComboBox()
+        combo_box.addItems(["Option 1", "Option 2", "Option 3"])
+        layout.addWidget(combo_box)
+        
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(QPushButton("Button 1"))
+        button_layout.addWidget(QPushButton("Button 2"))
+        layout.addLayout(button_layout)
 
-        self.widget.setLayout(self.vbox)
+        container.setLayout(layout)
 
-        #Scroll Area Properties
-        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setWidget(self.widget)
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(container)
+        scroll_area.setWidgetResizable(True)
 
-        self.setCentralWidget(self.scroll)
 
-        self.setGeometry(600, 100, 500, 500)
-        self.setWindowTitle('Scroll Area Demonstration')
-        self.show()
+        self.setWidget(scroll_area)
 
-        return
+        self.resize(200,200)
+        self.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetClosable)
 
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    main = MainWindow()
-    sys.exit(app.exec_())
-
-if __name__ == '__main__':
-    main()
+if __name__=="__main__":
+    app = QApplication([])
+    window = MainWindow()
+    window.show()
+    app.exec_()
