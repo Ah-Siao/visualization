@@ -2,13 +2,14 @@ import sys
 import sqlite3
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
-    QPushButton, QTableWidget, QTableWidgetItem, QLabel, QTextEdit
+    QPushButton, QTableWidget, QTableWidgetItem, QLabel, QTextEdit,  QSpacerItem, QSizePolicy
 )
 from vtkmodules.vtkRenderingCore import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor
 from vtk import vtkMoleculeMapper, vtkPeriodicTable, vtkSimpleBondPerceiver,vtkActor
 from vtkmodules.vtkCommonDataModel import vtkMolecule
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from PyQt5.QtCore import Qt
 
 
 class DatabaseSearchWidget(QWidget):
@@ -58,10 +59,20 @@ class DatabaseSearchWidget(QWidget):
         self.vtk_widget = QVTKRenderWindowInteractor(self)
         right_layout.addWidget(self.vtk_widget)
 
+        # Add spacer to push the button to the bottom
+        right_layout.addSpacerItem(QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum))
+
+        # Add Import Button
+        import_button = QPushButton("Import", self)
+        import_button.setFixedSize(100, 25)  # Adjust size as needed
+        #import_button.clicked.connect(self.import_action)
+        right_layout.addWidget(import_button, alignment=Qt.AlignRight)
+
         main_layout.addLayout(right_layout)
 
         # VTK setup
         self.renderer = vtkRenderer()
+        self.renderer.SetBackground([255,255,255])
         self.vtk_widget.GetRenderWindow().AddRenderer(self.renderer)
         self.interactor = self.vtk_widget.GetRenderWindow().GetInteractor()
 
@@ -131,8 +142,10 @@ class DatabaseSearchWidget(QWidget):
 
         # Update the renderer
         self.renderer.RemoveAllViewProps()
+        
         self.renderer.AddActor(actor)
         self.renderer.ResetCamera()
+         
         self.vtk_widget.GetRenderWindow().Render()
 
     def create_vtk_molecule(self, structure_data):
@@ -165,7 +178,7 @@ def main():
     db_path = "your_database.db"
 
     # Create a sample database for demonstration (optional)
-    create_sample_database(db_path)
+    #create_sample_database(db_path)
 
     window = DatabaseSearchWidget(db_path)
     window.show()
