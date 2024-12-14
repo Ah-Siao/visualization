@@ -57,9 +57,9 @@ class ProjectTreeDialog(QDialog):
     def populate_tree(self):
         # Example project data (each project could have images or PDFs)
         projects = {
-            "Project A": "m3gnet.pdf",  
-            "Project B": "m3gnet.pdf",  
-            "Project C": "m3gnet.pdf", 
+            "Project A": "test.pdf",  
+            "Project B": "test.pdf",  
+            "Project C": "test.pdf", 
         }
 
         for project, description in projects.items():
